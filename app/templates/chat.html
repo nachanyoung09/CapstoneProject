@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>채팅</title>
+</head>
+<body>
+  <h2>Room: {{ room_id }}</h2>
+  <input id="username" placeholder="Enter your name" />
+  <button onclick="joinRoom()">Join Room</button>
+
+  <div id="chat-box" style="height: 300px; overflow-y: scroll; border: 1px solid #aaa;"></div>
+  <input id="message" placeholder="Message" />
+  <button onclick="sendMessage()">Send</button>
+
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    const socket = io();//서버 소켓 연결, 나중에 서버 ip 넣어서 다른 기기 끼리 연결 가능 
+    const roomid = "{{ room_id }}"; //url에 따라 chatroomid 설정
+
+    function joinRoom() {//Join Room 버튼 클릭시 실행되는 함수
+      const username = document.getElementById('username').value;
+      socket.emit('join', { username, roomid });//서버로 유저이름과 방ID 전송
+    }
+
+    function sendMessage() {//서버로 메세지 보내는 함수
+      const username = document.getElementById('username').value;
+      const msg = document.getElementById('message').value;
+      socket.emit('message', {username, roomid, msg});//username, roomid, msg내용 전송
+      document.getElementById('message').value = '';//전송 후 입력공간 초기화
+    }
+
+    socket.on('chat_history',(messages) =>{
+      const box = document.getElementById('chat-box');
+      box.innerHTML = ''; // 이전 메시지 초기화
+      messages.forEach(m => {//messages는 {user, msg}의 array
+        box.innerHTML += `<p><strong>${m.user}:</strong> ${m.msg}</p>`;//messages의 각 원소에 있는 user와 msg를 입력
+      });
+    });
+
+    socket.on('message', (data) => {//서버에서 채팅 메세지 데이터 받아오는 함수, data = {user, msg}
+      const box = document.getElementById('chat-box');
+      box.innerHTML += `<p><strong>${data.user}:</strong> ${data.msg}</p>`;
+      box.scrollTop = box.scrollHeight;
+    });
+  </script>
+</body>
+</html>
