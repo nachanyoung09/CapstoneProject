@@ -39,7 +39,7 @@ def post_valuation():
     if not all([title, description, category]):
         return jsonify({"msg": "필수 필드 누락"}), 400
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     post = ValuationPost(
         title=title,
         description=description,
@@ -81,7 +81,7 @@ def valuation_price(postid):
     if not price:
         return jsonify({"msg": "가격 누락"}), 400
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     opinion = ValuationOpinion(
         post_id=postid,
         user_id=user_id,

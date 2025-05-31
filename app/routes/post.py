@@ -1,3 +1,4 @@
+
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -19,17 +20,20 @@ def register_post():
     if not all([title, description, category]):
         return jsonify({'msg': '필수 항목 누락'}), 400
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
+    
+    
 
     new_post = Post(
         title=title,
         description=description,
         category=category,
         thumbnail_image_url=thumbnail,
-        author_id=user_id
+        user_id=user_id
     )
     db.session.add(new_post)
     db.session.commit()
+    
 
     return jsonify({'msg': '게시글 등록 완료', 'post_id': new_post.id}), 201
 
@@ -38,8 +42,12 @@ def register_post():
 @jwt_required()
 def get_post_list():
     category = request.args.get('category')
-    page = int(request.args.get('page', 1))
-    per_page = int(request.args.get('per_page', 10))
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+        page = min(page, 1000)  # 과도한 페이지 요청 제한
+    except ValueError:
+        page = 1
+    per_page = min(int(request.args.get('per_page', 10)), 50)
 
     query = Post.query
     if category:
@@ -54,7 +62,7 @@ def get_post_list():
         'description': post.description,
         'category': post.category,
         'thumbnail_image_url': post.thumbnail_image_url,
-        'author_id': post.author_id,
+        'user_id': post.user_id,
         'created_at': post.created_at.strftime('%Y-%m-%d %H:%M')
     } for post in posts]
 
@@ -69,6 +77,7 @@ def get_post_list():
 @bp_post.route('/<int:postid>', methods=['GET'])
 @jwt_required()
 def get_post_detail(postid):
+    user_id = get_jwt_identity()
     post = Post.query.get(postid)
     if not post:
         return jsonify({'msg': '게시글을 찾을 수 없습니다.'}), 404
@@ -79,19 +88,56 @@ def get_post_detail(postid):
         'description': post.description,
         'category': post.category,
         'thumbnail_image_url': post.thumbnail_image_url,
-        'author_id': post.author_id,
-        'created_at': post.created_at.strftime('%Y-%m-%d %H:%M')
+        'user_id': post.user_id,
+        'created_at': post.created_at.strftime('%Y-%m-%d %H:%M'),
+
+        
     }), 200
+#본인 게시물 확인
+@bp_post.route('/me', methods=['GET'])
+@jwt_required()
+def get_my_posts():
+    user_id = int(get_jwt_identity())  # 로그인한 사용자 ID
+    category = request.args.get('category')
+    page = max(1, int(request.args.get('page', 1)))
+    per_page = min(int(request.args.get('per_page', 10)), 50)
+
+    query = Post.query.filter_by(user_id=user_id)
+    
+    if category:
+        query = query.filter_by(category=category)
+
+    pagination = query.order_by(Post.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    posts = pagination.items
+
+    result = [{
+        'id': post.id,
+        'title': post.title,
+        'description': post.description,
+        'category': post.category,
+        'thumbnail_image_url': post.thumbnail_image_url,
+        'user_id': post.user_id,
+        'created_at': post.created_at.strftime('%Y-%m-%d %H:%M')
+    } for post in posts]
+
+    return jsonify({
+        'total': pagination.total,
+        'page': page,
+        'per_page': per_page,
+        'posts': result
+    }), 200
+
 
 # 게시글 수정
 @bp_post.route('/<int:postid>', methods=['PUT'])
 @jwt_required()
 def update_post(postid):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     post = Post.query.get(postid)
     if not post:
         return jsonify({'msg': '게시글을 찾을 수 없습니다.'}), 404
-    if post.author_id != user_id:
+    
+    if post.user_id != user_id:
         return jsonify({'msg': '수정 권한이 없습니다.'}), 403
 
     data = request.get_json()
@@ -107,11 +153,11 @@ def update_post(postid):
 @bp_post.route('/<int:postid>', methods=['DELETE'])
 @jwt_required()
 def delete_post(postid):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     post = Post.query.get(postid)
     if not post:
         return jsonify({'msg': '게시글을 찾을 수 없습니다.'}), 404
-    if post.author_id != user_id:
+    if post.user_id != user_id:
         return jsonify({'msg': '삭제 권한이 없습니다.'}), 403
 
     db.session.delete(post)

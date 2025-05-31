@@ -11,7 +11,7 @@ def register_socketio_handlers(socketio: SocketIO):
     @socketio.on('join')
     def handle_join(data):
         # JWT에서 사용자 ID 가져오기
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         room_id = data['roomid']
         join_room(room_id)
 
@@ -34,7 +34,7 @@ def register_socketio_handlers(socketio: SocketIO):
     @socketio.on('message')
     def handle_message(data):
         # JWT에서 사용자 ID 가져오기
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         room_id = data['roomid']
         content = data['msg']
 

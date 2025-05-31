@@ -226,7 +226,7 @@ def search_posts():
     result = [{
         "id": p.id,
         "title": p.title,
-        "author_id": p.author_id,
+        "user_id": p.user_id,
         "category": p.category,
         "created_at": p.created_at.strftime('%Y-%m-%d') if p.created_at else None
     } for p in posts]
@@ -278,7 +278,7 @@ def advanced_search():
                 result.append({
                     "id": post.id,
                     "title": post.title,
-                    "author_id": post.author_id,
+                    "user_id": post.user_id,
                     "category": post.category,
                     "created_at": post.created_at.strftime('%Y-%m-%d') if post.created_at else None
                 })

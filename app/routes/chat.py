@@ -11,7 +11,7 @@ bp_chat = Blueprint('chat', __name__, url_prefix='/api/v1/chatrooms')
 @bp_chat.route('', methods=['GET'])
 @jwt_required()
 def view_chatrooms():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     chatrooms = Chatroom.query.filter(
         Chatroom.participant_ids.contains([user_id])
     ).all()
@@ -27,7 +27,7 @@ def view_chatrooms():
 @bp_chat.route('', methods=['POST'])
 @jwt_required()
 def create_chatroom():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     participant_ids = data.get('participantIds')  # list of ints
     related_post_id = data.get('relatedPostId')
@@ -52,7 +52,7 @@ def create_chatroom():
 @bp_chat.route('/<int:chatroomid>', methods=['GET'])
 @jwt_required()
 def view_chatroom_detail(chatroomid):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     chatroom = Chatroom.query.get(chatroomid)
     if not chatroom:
         return jsonify({'message': '채팅방을 찾을 수 없습니다.'}), 404
@@ -71,7 +71,7 @@ def view_chatroom_detail(chatroomid):
 @bp_chat.route('/<int:chatroomid>/messages', methods=['GET'])
 @jwt_required()
 def view_chatroom_messages(chatroomid):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     chatroom = Chatroom.query.get(chatroomid)
     if not chatroom:
         return jsonify({'message': '채팅방을 찾을 수 없습니다.'}), 404
@@ -100,7 +100,7 @@ def view_chatroom_messages(chatroomid):
 @bp_chat.route('/<int:chatroomid>/messages', methods=['POST'])
 @jwt_required()
 def send_chatroom_message(chatroomid):
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     content = data.get('content')
     if not content:
@@ -129,7 +129,7 @@ def send_chatroom_message(chatroomid):
 @bp_chat.route('/trade-promise', methods=['POST'])
 @jwt_required()
 def register_trade_promise():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     chatroom_id = data.get('chatroomId')
     date = data.get('date')

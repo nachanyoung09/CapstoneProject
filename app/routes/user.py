@@ -41,7 +41,7 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return jsonify({"msg": "사용자 이름 또는 비밀번호가 올바르지 않습니다."}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
     return jsonify({
         "access_token": access_token,
         "user": {
@@ -119,7 +119,7 @@ def user_trade_history(userid):
 @user_bp.route('/<int:userid>/points', methods=['PATCH'])
 @jwt_required()
 def user_points(userid):
-    if get_jwt_identity() != userid:
+    if int(get_jwt_identity()) != userid:
         return jsonify({"msg": "권한이 없습니다."}), 403
 
     data = request.get_json()
@@ -164,7 +164,7 @@ def user_grade(userid):
 @user_bp.route('/<int:userid>', methods=['DELETE'])
 @jwt_required()
 def delete_user(userid):
-    if get_jwt_identity() != userid:
+    if int(get_jwt_identity()) != userid:
         return jsonify({"msg": "권한이 없습니다."}), 403
 
     user = User.query.get(userid)

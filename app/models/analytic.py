@@ -13,7 +13,7 @@ class Analytics(db.Model):
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # 마지막 업데이트 시각
 
     # User 모델과 1:1 관계
-    user = db.relationship('User', backref=db.backref('analytics', uselist=False))
+    user = db.relationship('User', back_populates='analytics', uselist=False)
 
     def __repr__(self):
         return f"<Analytics user_id={self.user_id} trades={self.total_trades} success={self.success_rate}% rating={self.average_rating}>"

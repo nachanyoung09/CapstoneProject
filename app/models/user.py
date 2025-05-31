@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime
 
+# user.py
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -11,33 +12,45 @@ class User(db.Model):
 
     profile_image_url = db.Column(db.String(255), nullable=True)
     points = db.Column(db.Integer, default=0)
-    grade = db.Column(db.String(20), nullable=True)
+    grade = db.Column(db.String(20), nullable=False,default='보따리장수')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # 게시글 작성자 관계
-    posts = db.relationship('Post', backref='author', lazy=True)
-    # 거래 관계
-    requested_trades = db.relationship('Trade', backref='requester', lazy=True, foreign_keys='Trade.requester_id')
-    received_trades = db.relationship('Trade', backref='receiver', lazy=True, foreign_keys='Trade.receiver_id')
+    posts = db.relationship('Post', back_populates='author', lazy=True)
+    requested_trades = db.relationship(
+        'Trade', back_populates='requester', lazy=True,
+        foreign_keys='Trade.requester_id'
+    )
+    received_trades = db.relationship(
+        'Trade', back_populates='receiver', lazy=True,
+        foreign_keys='Trade.receiver_id'
+    )
+
     @property
     def trades(self):
-        # 요청 및 수락된 거래 모두 포함
         return self.requested_trades + self.received_trades
 
-    # 리뷰 관계
-    reviews_written = db.relationship('Review', backref='reviewer', lazy=True, foreign_keys='Review.reviewer_id')
-    reviews_received = db.relationship('Review', backref='target_user', lazy=True, foreign_keys='Review.user_id')
+    reviews_written = db.relationship(
+        'Review', back_populates='reviewer', lazy=True,
+        foreign_keys='Review.reviewer_id'
+    )
+    reviews_received = db.relationship(
+        'Review', back_populates='target_user', lazy=True,
+        foreign_keys='Review.user_id'
+    )
 
-    # 가치 평가 관계
-    valuation_posts = db.relationship('ValuationPost', backref='author', lazy=True)
-    valuation_opinions = db.relationship('ValuationOpinion', backref='user', lazy=True)
+    valuation_posts = db.relationship(
+        'ValuationPost', back_populates='author', lazy=True
+    )
+    valuation_opinions = db.relationship(
+        'ValuationOpinion', back_populates='user', lazy=True
+    )
 
-    # 분석 데이터 1:1 관계
-    analytics = db.relationship('Analytics', backref=db.backref('user', uselist=False))
+    analytics = db.relationship(
+        'Analytics', back_populates='user', uselist=False
+    )
 
-    # 채팅 및 약속 관계
-    messages = db.relationship('Message', backref='sender', lazy=True)
-    trade_promises = db.relationship('TradePromise', backref='creator', lazy=True)
+    messages = db.relationship('Message', back_populates='sender', lazy=True)
+    trade_promises = db.relationship('TradePromise', back_populates='creator', lazy=True)
 
     def __repr__(self):
         return f'<User {self.username}>'

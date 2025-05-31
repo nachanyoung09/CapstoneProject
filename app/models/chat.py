@@ -13,8 +13,8 @@ class Chatroom(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 관계 설정
-    messages = db.relationship('Message', backref='chatroom', lazy=True)
-    trade_promises = db.relationship('TradePromise', backref='chatroom', lazy=True)
+    messages = db.relationship('Message', back_populates='chatroom', lazy=True)
+    trade_promises = db.relationship('TradePromise', back_populates='chatroom', lazy=True)
 
     def __repr__(self):
         return f"<Chatroom {self.name} participants={self.participant_ids}>"
@@ -29,6 +29,8 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
+    chatroom = db.relationship('Chatroom', back_populates='messages')
+    sender = db.relationship('User', back_populates='messages')
     def __repr__(self):
         return f"<Message from={self.sender_id} in room={self.chatroom_id}>"
 
@@ -45,8 +47,8 @@ class TradePromise(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # 관계 설정
-    chatroom = db.relationship('Chatroom', backref=db.backref('trade_promises', lazy=True))
-    creator = db.relationship('User', backref=db.backref('trade_promises', lazy=True))
+    chatroom = db.relationship('Chatroom', back_populates='trade_promises')
+    creator = db.relationship('User', back_populates='trade_promises')
 
     def __repr__(self):
         return f"<TradePromise {self.title} at {self.location} on {self.date}>"

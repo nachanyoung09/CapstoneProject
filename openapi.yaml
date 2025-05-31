@@ -26,7 +26,7 @@ info:
 
     JWT 인증이 필요한 API의 경우 Authorize 버튼을 통해 토큰을 입력해주세요.'
 servers:
-- url: http://localhost:5000
+- url: https://673e-121-140-48-141.ngrok-free.app
   description: 로컬
 tags:
 - name: User
@@ -48,7 +48,7 @@ paths:
     post:
       tags:
         - User
-      summary: 사용자 회원가입
+      summary: 사용자 회원가입 (id=userid)
       requestBody:
         required: true
         content:
@@ -108,7 +108,7 @@ paths:
     post:
       tags:
         - User
-      summary: 사용자 로그아웃
+      summary: 사용자 로그아웃 (ex.localStorage.removeItem('access_token') 등으로 클라이언트에서 토큰 제거해야함 )
       security:
         - bearerAuth: []
       responses:
@@ -127,7 +127,7 @@ paths:
     get:
       tags:
         - User
-      summary: 사용자 프로필 조회
+      summary: 사용자 프로필 조회 ((userid(int)입력))
       parameters:
         - name: userid
           in: path
@@ -152,7 +152,7 @@ paths:
     get:
       tags:
         - User
-      summary: 사용자 리뷰 조회
+      summary: 사용자 리뷰 조회 (userid(int)입력)
       parameters:
         - name: userid
           in: path
@@ -173,7 +173,7 @@ paths:
     get:
       tags:
         - User
-      summary: 사용자 거래 내역 조회
+      summary: 사용자 거래 내역 조회 (userid(int)입력)
       parameters:
         - name: userid
           in: path
@@ -194,7 +194,7 @@ paths:
     patch:
       tags:
         - User
-      summary: 사용자 포인트 수정
+      summary: 사용자 포인트 수정 ('amount 값 1~50 제한')
       security:
         - bearerAuth: []
       parameters:
@@ -284,7 +284,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  paths:
+
   /api/v1/trades/{tradeid}/accept:
     post:
       tags:
@@ -410,7 +410,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  paths:
+  
   /api/v1/posts:
     post:
       tags:
@@ -468,13 +468,13 @@ paths:
             type: string
         - name: page
           in: query
-          description: 페이지 번호 (기본값 1)
+          description: 페이지 번호 (빈칸시 기본값 1,최대 500 )
           required: false
           schema:
             type: integer
         - name: per_page
           in: query
-          description: 페이지당 항목 수 (기본값 10)
+          description: 페이지당 항목 수 (빈칸시 기본값 10,최대50)
           required: false
           schema:
             type: integer
@@ -525,6 +525,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
 
     put:
       tags:
@@ -607,7 +608,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  paths:
+  /api/v1/posts/me:
+    get:
+      tags:
+        - Post
+      summary: 나의 게시글 목록 조회
+      description: 로그인한 사용자가 작성한 게시글 목록을 조회합니다.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          description: 필터할 카테고리 (선택)
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 페이지 번호 (빈칸시 기본값 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+            maximum: 1000
+        - name: per_page
+          in: query
+          description: 페이지당 항목 수 (빈칸시 기본값 10)
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: 게시글 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+                  posts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        category:
+                          type: string
+                        thumbnail_image_url:
+                          type: string
+                        user_id:
+                          type: integer
+                        created_at:
+                          type: string
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/v1/chatrooms:
     get:
       tags:
@@ -776,8 +847,8 @@ paths:
           description: 필드 누락
         '404':
           description: 채팅방 없음
-  paths:
-  /api/v1/valuation/posts:
+ 
+  /api/v1/valuations:
     get:
       tags:
         - Valuation
@@ -856,7 +927,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/valuation/posts/{postid}:
+  /api/v1/valuations/{postid}:
     get:
       tags:
         - Valuation
@@ -921,7 +992,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/v1/valuation/posts/{postid}/opinions:
+  /api/v1/valuations/{postid}/price:
     post:
       tags:
         - Valuation
@@ -963,7 +1034,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  paths:
+  /api/v1/valuations/{postid}/average:
+    get:
+      tags:
+        - Valuation
+      summary: 게시글의 평균 가격 조회
+      description: 특정 가치 평가 게시글에 대한 유효한 의견들의 평균 가격을 반환합니다. JWT 인증 필요.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postid
+          in: path
+          required: true
+          description: 평균 가격을 조회할 게시글 ID
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: 평균 가격 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValuationAverageResponse'
+        '404':
+          description: 게시글을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
   /api/v1/analytics/trade-stats:
     get:
       tags:
@@ -1020,7 +1120,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  paths:
+ 
   /api/v1/search:
     get:
       tags:
@@ -1067,6 +1167,33 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/SearchPostItem'
+  /api/v1/search/advanced:
+    get:
+      tags:
+        - Search
+      summary: 제목 기반 고급 게시글 검색
+      description: 입력한 제목(title)을 기반으로 하이브리드 검색을 수행하여 유사 게시글을 반환합니다.
+      parameters:
+        - name: title
+          in: query
+          required: true
+          description: 검색할 게시글 제목
+          schema:
+            type: string
+            example: 에어팟 프로 중고 팝니다
+      responses:
+        '200':
+          description: 검색 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdvancedSearchResponse'
+        '400':
+          description: 잘못된 요청 (title 없음)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     UserRegisterRequest:
@@ -1170,7 +1297,7 @@ components:
       properties:
         grade:
           type: string
-          example: Gold
+          example: 초보상인
         points:
           type: integer
           example: 1250
@@ -1221,11 +1348,24 @@ components:
           type: string
         category:
           type: string
-        author_id:
+        user_id:
           type: integer
         created_at:
           type: string
           format: date-time
+
+    PostUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        thumbnail_image_url:
+          type: string
+
 
     Chatroom:
       type: object
@@ -1338,6 +1478,19 @@ components:
         price:
           type: integer
           example: 600000
+    ValuationAverageResponse:
+      type: object
+      properties:
+        postId:
+          type: integer
+          example: 123
+        validCount:
+          type: integer
+          example: 5
+        averagePrice:
+          type: number
+          format: float
+          example: 28700.0
 
     TradeStatsResponse:
       type: object
@@ -1379,10 +1532,44 @@ components:
         created_at:
           type: string
           format: date-time
+    
+    AdvancedSearchResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 2
+        posts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 123
+              title:
+                type: string
+                example: 에어팟 프로 중고 팝니다
+              user_id:
+                type: integer
+                example: 1
+              category:
+                type: string
+                example: 전자기기
+              created_at:
+                type: string
+                format: date-time
+                example: 2024-06-01
 
     ErrorResponse:
       type: object
       properties:
+        status:
+          type: string
+          example: error
         msg:
           type: string
           example: 오류 메시지입니다.

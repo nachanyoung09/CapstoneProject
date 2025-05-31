@@ -15,7 +15,7 @@ def accept_trade(tradeid):
     if not trade:
         return jsonify({'msg': '해당 거래 제안을 찾을 수 없습니다.'}), 404
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     if trade.receiver_id != user_id:
         return jsonify({'msg': '수락 권한이 없습니다.'}), 403
 
@@ -33,7 +33,7 @@ def complete_trade(tradeid):
     if not trade:
         return jsonify({'msg': '해당 거래 제안을 찾을 수 없습니다.'}), 404
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     if trade.receiver_id != user_id and trade.requester_id != user_id:
         return jsonify({'msg': '완료 권한이 없습니다.'}), 403
 
@@ -51,7 +51,7 @@ def review_trade(tradeid):
     if not trade:
         return jsonify({'msg': '해당 거래 제안을 찾을 수 없습니다.'}), 404
 
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     rating = data.get("rating")
     comment = data.get("comment")
