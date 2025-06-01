@@ -1,7 +1,5 @@
-# app/socket_handlers.py (Updated to use DB for chat history)
 from flask_socketio import SocketIO, emit, join_room
 from flask import request
-from app import db
 from app.models.chat import Chatroom, Message
 from flask_jwt_extended import get_jwt_identity
 from datetime import datetime
@@ -10,6 +8,7 @@ from datetime import datetime
 def register_socketio_handlers(socketio: SocketIO):
     @socketio.on('join')
     def handle_join(data):
+        from app import db
         # JWT에서 사용자 ID 가져오기
         user_id = int(get_jwt_identity())
         room_id = data['roomid']
@@ -33,6 +32,7 @@ def register_socketio_handlers(socketio: SocketIO):
 
     @socketio.on('message')
     def handle_message(data):
+        from app import db
         # JWT에서 사용자 ID 가져오기
         user_id = int(get_jwt_identity())
         room_id = data['roomid']

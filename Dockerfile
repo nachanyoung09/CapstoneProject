@@ -16,7 +16,7 @@ COPY requirements.txt .
 
 RUN pip install --upgrade pip 
 RUN pip install --no-cache-dir -r requirements.txt 
-RUN pip install --no-cache-dir git+https://github.com/facebookresearch/fastText.git
+
 
 RUN python -m nltk.downloader -d /usr/local/nltk_data punkt stopwords
 ENV NLTK_DATA=/usr/local/nltk_data

@@ -1,3 +1,4 @@
+# app/models/valuation_opinion.py
 from app import db
 from datetime import datetime
 
@@ -10,8 +11,9 @@ class ValuationOpinion(db.Model):
     price = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    post = db.relationship('ValuationPost', back_populates='opinions',lazy=True)
-    user = db.relationship('User', back_populates='valuation_opinions',lazy=True)
+    # Relationship: Post and User
+    post = db.relationship('ValuationPost', back_populates='opinions', lazy=True)
+    user = db.relationship('User', back_populates='valuation_opinions', lazy=True)
 
     def __repr__(self):
-        return f'<ValuationOpinion post_id={self.post_id} user_id={self.user_id} price={self.price}>'
+        return f"<ValuationOpinion post_id={self.post_id} user_id={self.user_id} price={self.price}>"

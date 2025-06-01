@@ -35,7 +35,6 @@ six==1.17.0
 tqdm==4.67.1
 urllib3==2.4.0
 Werkzeug==3.1.3
-keybert
 flask_sqlalchemy==3.1.1
 python-dotenv
 pymysql==1.1.0

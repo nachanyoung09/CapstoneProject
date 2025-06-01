@@ -1,9 +1,11 @@
 import os
-from app import create_app, socket_io, db
+from app import create_app, socket_io,db
 from flask_migrate import init, migrate, stamp, upgrade
 from sqlalchemy import text
 
+
 app = create_app()
+
 
 # ✅ 마이그레이션 및 테스트는 앱 컨텍스트 내에서만 가능
 if __name__ == '__main__':
@@ -29,4 +31,11 @@ if __name__ == '__main__':
             print('✅ 회원가입 응답:', response.get_json(), '\n')
 
     # ✅ Flask SocketIO 실행
-    socket_io.run(app, host='0.0.0.0', port=5000, debug=True, use_reloader=False)
+    socket_io.run(
+        app,
+        host='0.0.0.0',
+        port=5000,
+        debug=True,
+        use_reloader=False,
+        allow_unsafe_werkzeug=True
+    )

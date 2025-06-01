@@ -5,7 +5,8 @@ from app import db
 from app.models.user import User
 from app.models.post import Post
 from app.models.review import Review
-from app.models.trade import Trade
+from app.models.trade import Trade,TradeStatus
+from datetime import datetime
 
 user_bp = Blueprint('user', __name__, url_prefix='/api/v1/users')
 
@@ -103,15 +104,53 @@ def user_review(userid):
 
 # 거래 이력
 @user_bp.route('/<int:userid>/trades', methods=['GET'])
+@jwt_required()
 def user_trade_history(userid):
-    trades = Trade.query.filter_by(requester_id=userid).order_by(Trade.created_at.desc()).all()
+    """
+    현재 로그인한 사용자가 참여한 거래 내역을 반환합니다.
+    응답 예시:
+    [
+      {
+        "tradeId": 123,
+        "postId": 456,
+        "postTitle": "중고 노트북 팝니다",
+        "counterpartId": 789,
+        "status": "COMPLETED",
+        "createdAt": "2025-05-31 20:20",
+        "completedAt": "2025-06-01 10:00"
+      },
+      ...
+    ]
+    """
+    user = User.query.get(userid)
+    if not user:
+        return jsonify({"msg": "사용자를 찾을 수 없습니다."}), 404
 
-    result = [{
-        "tradeId": t.id,
-        "title": t.title,
-        "status": t.status,
-        "completedAt": t.completed_at.strftime('%Y-%m-%d') if t.completed_at else None
-    } for t in trades]
+    # 로그인한 사용자가 requester 또는 receiver인 모든 Trade를 조회
+    trades = Trade.query.filter(
+        (Trade.requester_id == userid) | (Trade.receiver_id == userid)
+    ).order_by(Trade.created_at.desc()).all()
+
+    result = []
+    for t in trades:
+        # 관련된 Post 객체
+        post = t.post  # Trade 모델에서 post = relationship('Post', …) 로 연결되어 있어야 합니다
+        if not post:
+            # 혹시 post가 삭제되어 없을 수도 있으니, 안전하게 건너뜁니다
+            continue
+
+        # 거래 상대방 ID 계산
+        counterpart_id = t.receiver_id if t.requester_id == userid else t.requester_id
+
+        result.append({
+            "tradeId": t.id,
+            "postId": post.id,
+            "postTitle": post.title,        # ← t.post.title 로 수정
+            "counterpartId": counterpart_id,
+            "status": t.status.value,       # TradeStatus enum이면 .value 를 사용
+            "createdAt": t.created_at.strftime('%Y-%m-%d %H:%M'),
+            "completedAt": t.completed_at.strftime('%Y-%m-%d %H:%M') if t.completed_at else None
+        })
 
     return jsonify(result), 200
 

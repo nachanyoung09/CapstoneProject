@@ -8,10 +8,12 @@ from flask_migrate import Migrate
 from sqlalchemy import text
 from flask_socketio import SocketIO
 
+
 load_dotenv()
 
 # 확장 객체 정의
-socket_io = SocketIO(cors_allowed_origins="*")
+
+socket_io = SocketIO(async_mode='threading', cors_allowed_origins="*")
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
@@ -35,6 +37,9 @@ def create_app():
     migrate.init_app(app, db)
     socket_io.init_app(app)
     CORS(app)
+
+    from app.socket_handlers import register_socketio_handlers #c
+    register_socketio_handlers(socket_io) #c
 
     # 블루프린트 등록
     from app.routes.user import user_bp
